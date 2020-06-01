@@ -5,7 +5,7 @@ import datetime
 import time
 
 options = webdriver.ChromeOptions()
-#options.add_argument('headless')
+options.add_argument('headless')
 options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36")
 
 #chromedriver = './code/chromedriver.exe'
@@ -24,7 +24,7 @@ class DBConnect:
     
     def insert(self, date, hour, rank, name, price, release):
         try:
-            sql = """INSERT INTO cpu(DATE, HOUR, RANKING, NAME, PRICE, RELEASE_DATE) VALUES (%s, %s, %s, %s, %s, %s)"""
+            sql = """INSERT INTO cpu(CRAWL_DATE, HOUR, RANKING, NAME, PRICE, RELEASE_DATE) VALUES (%s, %s, %s, %s, %s, %s)"""
             
             for i in range(50):
                 

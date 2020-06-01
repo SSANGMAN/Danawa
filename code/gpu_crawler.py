@@ -29,7 +29,7 @@ class DBConnect:
     
     def insert(self, date, hour, rank, name, price, release, brand):
         try:
-            sql = """INSERT INTO gpu(DATE, HOUR, RANKING, NAME, PRICE, RELEASE_DATE, BRAND) VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+            sql = """INSERT INTO gpu(CRAWL_DATE, HOUR, RANKING, NAME, PRICE, RELEASE_DATE, BRAND) VALUES (%s, %s, %s, %s, %s, %s, %s)"""
             
             for i in range(50):
                 
