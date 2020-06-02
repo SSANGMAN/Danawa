@@ -1,11 +1,12 @@
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 import pymysql
-
+import numpy
 import time
 import datetime
 
 options = webdriver.ChromeOptions()
-options.add_argument('headless')
+#options.add_argument('headless')
 options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36")
 
 chromedriver = 'C:/Users/PARK/Desktop/Analysis/Danawa/code/chromedriver.exe'
@@ -51,6 +52,10 @@ def main():
     product_price_list = []
     product_enroll_list = []
 
+    name_xpath = "/html/body/form/div/div[3]/ul/li[{}]/div/div[2]/div[1]/a"
+    price_xpath = "/html/body/form/div/div[3]/ul/li[{}]/div/div[3]/div/dl/dd/span"
+    enroll_xpath = "/html/body/form/div/div[3]/ul/li[{}]/div/div[2]/div[2]/dl/dd"
+
     for i in range(1, 4):
         print("Page: {}\n".format(i))
         page_xpath = "/html/body/form/div/div[4]/div/a[{}]".format(i)
@@ -60,62 +65,86 @@ def main():
         
         if i == 1:
             for j in range(1, 24):
-                product_name_xpath = "/html/body/form/div/div[3]/ul/li[{}]/div/div[2]/div[1]/a".format(j)
-                product_price_xpath = "/html/body/form/div/div[3]/ul/li[{}]/div/div[3]/div/dl/dd/span".format(j)
-                product_enroll_xpath = "/html/body/form/div/div[3]/ul/li[{}]/div/div[2]/div[2]/dl/dd".format(j)
-                
-                product_name = driver.find_element_by_xpath(product_name_xpath)
-                product_price = driver.find_element_by_xpath(product_price_xpath)
-                product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
+                product_name_xpath = name_xpath.format(j)
+                product_price_xpath = price_xpath.format(j)
+                product_enroll_xpath = enroll_xpath.format(j)
+                    
+                try:
+                    product_name = driver.find_element_by_xpath(product_name_xpath)
+                    product_price = driver.find_element_by_xpath(product_price_xpath)
+                    product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
 
-                print(product_name.text)
-                print(product_price.text)
-                print(product_enroll.text)
+                    print(product_name.text,"\n",product_price.text,"\n",product_enroll.text)
 
+                    product_price_list.append(product_price.text)
+
+                except NoSuchElementException:
+                    product_name = driver.find_element_by_xpath(product_name_xpath)
+                    product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
+                    
+                    print(product_name.text,"\n","0","\n",product_enroll.text)
+
+                    product_price_list.append('0')
+                    
                 product_name_list.append(product_name.text)
-                product_price_list.append(product_price.text)
                 product_enroll_list.append(product_enroll.text)
-
+                
                 time.sleep(1)
 
         elif i == 2:
             for j in range(1, 21):
-                product_name_xpath =  "/html/body/form/div/div[3]/ul/li[{}]/div/div[2]/div[1]/a".format(j)
-                product_price_xpath = "/html/body/form/div/div[3]/ul/li[{}]/div/div[3]/div/dl/dd/span".format(j)
-                product_enroll_xpath = "/html/body/form/div/div[3]/ul/li[{}]/div/div[2]/div[2]/dl/dd".format(j)
+                product_name_xpath = name_xpath.format(j)
+                product_price_xpath = price_xpath.format(j)
+                product_enroll_xpath = enroll_xpath.format(j)
 
-                product_name = driver.find_element_by_xpath(product_name_xpath)
-                product_price = driver.find_element_by_xpath(product_price_xpath)
-                product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
+                try:
+                    product_name = driver.find_element_by_xpath(product_name_xpath)
+                    product_price = driver.find_element_by_xpath(product_price_xpath)
+                    product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
 
-                print(product_name.text)
-                print(product_price.text)
-                print(product_enroll.text)
+                    print(product_name.text,"\n",product_price.text,"\n",product_enroll.text)
 
+                    product_price_list.append(product_price.text)
+
+                except NoSuchElementException:
+                    product_name = driver.find_element_by_xpath(product_name_xpath)
+                    product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
+                    
+                    print(product_name.text,"\n","0","\n",product_enroll.text)
+
+                    product_price_list.append('0')
+                    
                 product_name_list.append(product_name.text)
-                product_price_list.append(product_price.text)
                 product_enroll_list.append(product_enroll.text)
-
+                
                 time.sleep(1)
-        
+
         elif i == 3:
             for j in range(1, 8):
-                product_name_xpath =  "/html/body/form/div/div[3]/ul/li[{}]/div/div[2]/div[1]/a".format(j)
-                product_price_xpath = "/html/body/form/div/div[3]/ul/li[{}]/div/div[3]/div/dl/dd/span".format(j)
-                product_enroll_xpath = "/html/body/form/div/div[3]/ul/li[{}]/div/div[2]/div[2]/dl/dd".format(j)
+                product_name_xpath = name_xpath.format(j)
+                product_price_xpath = price_xpath.format(j)
+                product_enroll_xpath = enroll_xpath.format(j)
 
-                product_name = driver.find_element_by_xpath(product_name_xpath)
-                product_price = driver.find_element_by_xpath(product_price_xpath)
-                product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
+                try:
+                    product_name = driver.find_element_by_xpath(product_name_xpath)
+                    product_price = driver.find_element_by_xpath(product_price_xpath)
+                    product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
 
-                print(product_name.text)
-                print(product_price.text)
-                print(product_enroll.text)
+                    print(product_name.text,"\n",product_price.text,"\n",product_enroll.text)
 
+                    product_price_list.append(product_price.text)
+
+                except NoSuchElementException:
+                    product_name = driver.find_element_by_xpath(product_name_xpath)
+                    product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
+                    
+                    print(product_name.text,"\n","0","\n",product_enroll.text)
+
+                    product_price_list.append('0')
+                    
                 product_name_list.append(product_name.text)
-                product_price_list.append(product_price.text)
                 product_enroll_list.append(product_enroll.text)
-
+                
                 time.sleep(1)
 
     driver.quit()
