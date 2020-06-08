@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 import matplotlib.pyplot as plt
-import seaborn as sns
+import plotly.graph_objects as go
 
 import pymysql
 import streamlit as st
@@ -89,6 +89,7 @@ st.markdown(
     Shows the data frames for the selected time period.
     """)
 df = import_data(component_box, start_date, end_date)
+#df.drop_duplicates(subset = ["CRAWL_DATE", "HOUR", "NAME"], inplace = True)
 cols = df.columns.tolist()
 selected_time = int(time_interval[:-1]) 
 st_ms = st.multiselect("Columns", df.columns.tolist(), default = cols)
@@ -153,27 +154,56 @@ def LinePlotPreprocess(data, process_type):
 st.subheader("RANKING")
 st.markdown(
     """ 
-    Shows the ranking changes of products during the specified period.
+    Shows the ranking changes for the top 50 popular products from the start date.
     """
 )
 #### About Price
 ranking_df = LinePlotPreprocess(brand_df, process_type = 'rank')
 ### Visualization
 try:
-    st.line_chart(ranking_df)
+    fig = go.Figure()
+    for product in ranking_df.columns:
+        fig.add_trace(go.Scatter(x = ranking_df.index, y = ranking_df[product], name = "{}".format(product)))
+    st.plotly_chart(fig, use_container_width = True)
 except ValueError:
     st.error("Invalid period specification, or no collected data exists. Please re-specify the period.")
 
 st.subheader("Price")
 st.markdown(
     """ 
-    Shows the price changes of products during the specified period.
+    Shows the price changes for the top 50 popular products from the start date.
     """
 )
 #### About Price
 price_df = LinePlotPreprocess(brand_df, process_type = 'price')
 ### Visualization
 try:
-    st.line_chart(price_df)
+    fig = go.Figure()
+    for product in price_df.columns:
+        fig.add_trace(go.Scatter(x = price_df.index, y = price_df[product], name = "{}".format(product)))
+    st.plotly_chart(fig, use_container_width = True)
 except ValueError:
     st.error("Invalid period specification, or no collected data exists. Please re-specify the period.")
+
+st.header("Statistic Table")
+st.markdown(
+    """
+    Displays statistics in table format for the product.
+    """
+)
+st.subheader("Price")
+st.markdown(
+    """
+    Average price for products in the ranking. 
+
+    If CURRENT_PRICE is NaN, It is currently out of the Ranking. 
+    """
+)
+mean_price_table = brand_df.groupby("NAME")['PRICE'].mean().reset_index().round(2).sort_values("PRICE", ascending = False).assign(AVG_PRICE = lambda x: x.pop("PRICE").apply(lambda y: "%.2f" % y))
+now_price_table = import_data(component_box, today, today)
+now_price_table.drop_duplicates(subset = ["CRAWL_DATE", "HOUR", "NAME"], inplace = True)
+now_price_table = now_price_table.loc[now_price_table['HOUR'] == datetime.datetime.now().hour]
+result_table = pd.merge(mean_price_table, now_price_table, on = 'NAME', how = 'left')[['NAME', 'AVG_PRICE', "PRICE"]]
+result_table.rename(columns = {'PRICE':'CURRENT_PRICE(₩)', "AVG_PRICE":"AVG_PRICE(₩)"}, inplace = True)
+
+st.table(result_table)
