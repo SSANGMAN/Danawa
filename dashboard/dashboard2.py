@@ -123,15 +123,40 @@ def CurrentPrice(dataframe):
         if len(df) != 0:
             break
     
-    return df[['NAME', 'PRICE']]
+    return df[['NAME', 'PRICE', 'SOCKET']]
 
-cpu_df = import_data(table = "cpu", start_date = today, end_date = today)
-cpu_df = CurrentPrice(cpu_df)
+try:
+    cpu_df = import_data(table = "cpu", start_date = today, end_date = today)
+    cpu_df = CurrentPrice(cpu_df)
 
-if selected_cpu_brand == 'Intel':
-    filter_cpu_df = cpu_df[cpu_df['NAME'].str.contains(r'인텔')]
-elif selected_cpu_brand == 'AMD':
-    filter_cpu_df = cpu_df[cpu_df['NAME'].str.contains(r'AMD')]
+    if selected_cpu_brand == 'Intel':
+        filter_cpu_df = cpu_df[cpu_df['NAME'].str.contains(r'인텔')]
+    elif selected_cpu_brand == 'AMD':
+        filter_cpu_df = cpu_df[cpu_df['NAME'].str.contains(r'AMD')]
+
+except  ValueError:
+    st.error("먼저 왼쪽에서 예산을 기입해주세요!")
 
 st.dataframe(filter_cpu_df)
+select_cpu = st.selectbox("CPU 선택", filter_cpu_df['NAME'].unique().tolist())
+#remain_budget = budget_box - filter_cpu_df.loc[filter_cpu_df['NAME'] == select_cpu]['PRICE'].values()
+#st.text("잔여 예산: ", remain_budget)
 
+st.header("Main Board 선택")
+st.markdown(
+    """
+    CPU를 선택했다면, 이제 메인보드를 선택해야합니다. 메인보드는 쉽게 말해, 컴퓨터의 혈관이자 신경계라고 생각하시면 됩니다. 
+
+    컴퓨터는 CPU, 램, 그래픽카드 등으로 구성되어 있는데, 이러한 부품들은 서로 따로 놀 수 는 없고 각 부품들을 하나로 연결해주는 회로와 신호를 밖으로 보낼 수 있는 출력 포트가 필요합니다. 
+
+    이 기능을 가지고 있는 부품이 메인보드입니다. 쉽게 말해, 컴퓨터의 안정성을 좌우하기 때문에 예산을 아끼지 말하야 하는 부품 중 하나라고 할 수 있습니다. 
+
+    메인보드에는 CPU를 장착할 수 있는 소켓이 존재합니다. 이런 소켓은 CPU마다 상이할 수 있기 때문에 위에서 선택한 CPU와 호환이 되는 메인보드를 선택해야 합니다.
+    """
+)
+try:
+    mb_df = import_data(table = "mainboard", start_date = today, end_date = today)
+    mb_df = CurrentPrice(mb_df)
+
+    filter_mb_df = mb_df[mb_df]
+    

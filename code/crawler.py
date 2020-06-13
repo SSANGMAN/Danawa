@@ -24,13 +24,13 @@ class DBConnect:
         self.conn = pymysql.connect(host = 'localhost', user = 'root', password = '4643' , db = 'danawa', charset = 'utf8')
         self.curs = self.conn.cursor(pymysql.cursors.DictCursor)
     
-    def insert(self, date, hour, rank, name, price, release):
+    def insert(self, date, hour, rank, name, price, release, socket):
         try:
-            sql = """INSERT INTO cpu(CRAWL_DATE, HOUR, RANKING, NAME, PRICE, RELEASE_DATE) VALUES (%s, %s, %s, %s, %s, %s)"""
+            sql = """INSERT INTO cpu(CRAWL_DATE, HOUR, RANKING, NAME, PRICE, RELEASE_DATE, SOCKET) VALUES (%s, %s, %s, %s, %s, %s, %s)"""
             
             for i in range(50):
                 
-                self.curs.execute(sql, (date, hour, i+1, name[i], price[i], release[i]))
+                self.curs.execute(sql, (date, hour, i+1, name[i], price[i], release[i], socket[i]))
             
             self.conn.commit()
             
@@ -47,10 +47,12 @@ def main():
     product_name_list = []
     product_price_list = []
     product_enroll_list = []
+    product_socket_list = []
 
     name_xpath = "/html/body/form/div/div[2]/ul/li[{}]/div/div[2]/div[1]/a"
     price_xpath = "/html/body/form/div/div[2]/ul/li[{}]/div/div[3]/div/dl/dd/span"
     enroll_xpath = "/html/body/form/div/div[2]/ul/li[{}]/div/div[2]/div[2]/dl/dd"
+    socket_xpath = "/html/body/form/div/div[2]/ul/li[{}]/div/div[2]/dl/dd/ul/li[1]"
 
     for i in range(1, 4):
         print("Page: {}\n".format(i))
@@ -63,26 +65,30 @@ def main():
                 product_name_xpath =  name_xpath.format(j)
                 product_price_xpath = price_xpath.format(j)
                 product_enroll_xpath = enroll_xpath.format(j)
+                product_socket_xpath = socket_xpath.format(j)
                 
                 try:
                     product_name = driver.find_element_by_xpath(product_name_xpath)
                     product_price = driver.find_element_by_xpath(product_price_xpath)
                     product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
+                    product_socket = driver.find_element_by_xpath(product_socket_xpath)
 
-                    print(product_name.text,"\n",product_price.text,"\n",product_enroll.text)
+                    print(product_name.text,"\n",product_socket.text,"\n",product_price.text,"\n",product_enroll.text)
                     
                     product_price_list.append(product_price.text)
 
                 except NoSuchElementException:
                     product_name = driver.find_element_by_xpath(product_name_xpath)
                     product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
-                    
+                    product_socket = driver.find_element_by_xpath(product_socket_xpath)
+
                     print(product_name.text,"\n","0","\n",product_enroll.text)
 
                     product_price_list.append('0')
                     
                 product_name_list.append(product_name.text)
                 product_enroll_list.append(product_enroll.text)
+                product_socket_list.append(product_socket.text)
                 
                 time.sleep(1)
 
@@ -91,19 +97,22 @@ def main():
                 product_name_xpath =  name_xpath.format(j)
                 product_price_xpath = price_xpath.format(j)
                 product_enroll_xpath = enroll_xpath.format(j)
+                product_socket_xpath = socket_xpath.format(j)
                         
                 try:
                     product_name = driver.find_element_by_xpath(product_name_xpath)
                     product_price = driver.find_element_by_xpath(product_price_xpath)
                     product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
+                    product_socket = driver.find_element_by_xpath(product_socket_xpath)
 
-                    print(product_name.text,"\n",product_price.text,"\n",product_enroll.text)
+                    print(product_name.text,"\n",product_socket.text,"\n",product_price.text,"\n",product_enroll.text)
 
                     product_price_list.append(product_price.text)
                             
                 except NoSuchElementException:
                     product_name = driver.find_element_by_xpath(product_name_xpath)
                     product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
+                    product_socket = driver.find_element_by_xpath(product_socket_xpath)
                     
                     print(product_name.text,"\n","0","\n",product_enroll.text)
 
@@ -111,6 +120,7 @@ def main():
                     
                 product_name_list.append(product_name.text)
                 product_enroll_list.append(product_enroll.text)
+                product_socket_list.append(product_socket.text)
                 
                 time.sleep(1)
                 
@@ -119,19 +129,22 @@ def main():
                 product_name_xpath =  name_xpath.format(j)
                 product_price_xpath = price_xpath.format(j)
                 product_enroll_xpath = enroll_xpath.format(j)
+                product_socket_xpath = socket_xpath.format(j)
                 
                 try:
                     product_name = driver.find_element_by_xpath(product_name_xpath)
                     product_price = driver.find_element_by_xpath(product_price_xpath)
                     product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
+                    product_socket = driver.find_element_by_xpath(product_socket_xpath)
 
-                    print(product_name.text,"\n",product_price.text,"\n",product_enroll.text)
+                    print(product_name.text,"\n",product_socket.text,"\n",product_price.text,"\n",product_enroll.text)
 
                     product_price_list.append(product_price.text)
 
                 except NoSuchElementException:
                     product_name = driver.find_element_by_xpath(product_name_xpath)
                     product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
+                    product_socket = driver.find_element_by_xpath(product_socket_xpath)
                     
                     print(product_name.text,"\n","0","\n",product_enroll.text)
 
@@ -139,6 +152,7 @@ def main():
                     
                 product_name_list.append(product_name.text)
                 product_enroll_list.append(product_enroll.text)
+                product_socket_list.append(product_socket.text)
                 
                 time.sleep(1)
         
@@ -150,6 +164,6 @@ def main():
     rank = range(1, 51)
 
     db = DBConnect()
-    db.insert(crawl_date, crawl_time, rank, product_name_list, product_price_list, product_enroll_list)
+    db.insert(crawl_date, crawl_time, rank, product_name_list, product_price_list, product_enroll_list, product_socket_list)
 
 main()
