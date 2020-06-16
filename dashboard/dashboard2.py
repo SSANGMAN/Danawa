@@ -35,28 +35,6 @@ def import_data(table, start_date, end_date):
     
     return df
 
-# Main Title Setting 
-st.title("컴못알을 위한 조립 PC 견적 참고 키트")
-st.markdown(
-    """
-    조립 PC에 대해 잘 알지 못하는 사람(컴못알)은 컴퓨터를 구매할 때 무엇을 고려해야 하는지 잘 알지 못합니다. 이런 사람들을 위해 참고할 수 있는 대시보드입니다.
-
-    이 대시보드는 다음과 같은 문제를 해결할 수 있을 것이라 예상합니다.
-
-    1. 구매자의 목적에 부합한 PC 부품 선택
-
-    2. PC의 호환성과 성능 병목 현상 문제 방지
-
-    이 대시보드는 언제까지나 참고용이며, 구매 전 전문가에게 상담하는 것을 추천합니다.
-
-    이 페이지는 현재 제작 중입니다.
-
-    추천 사이트: [IT 인벤 PC 견적 게시판](http://www.inven.co.kr/board/it/2631)
-
-    대시보드 최종 수정일: 2020/06/11
-
-    [See Source Code](https://github.com/SSANGMAN/Danawa)
-    """)
 
 # Sidebar Setting
 ## Condition
@@ -85,6 +63,28 @@ st.sidebar.text(
     그러나, 옵션 타협을 고려해야 합니다. 
     """
 )
+# Main Title Setting 
+st.title("컴못알을 위한 조립 PC 견적 참고 키트({})".format(purpose_button))
+st.markdown(
+    """
+    조립 PC에 대해 잘 알지 못하는 사람(컴못알)은 컴퓨터를 구매할 때 무엇을 고려해야 하는지 잘 알지 못합니다. 이런 사람들을 위해 참고할 수 있는 대시보드입니다.
+
+    이 대시보드는 다음과 같은 문제를 해결할 수 있을 것이라 예상합니다.
+
+    1. 구매자의 목적에 부합한 PC 부품 선택
+
+    2. PC의 호환성과 성능 병목 현상 문제 방지
+
+    이 대시보드는 언제까지나 참고용이며, 구매 전 전문가에게 상담하는 것을 추천합니다.
+
+    이 페이지는 현재 제작 중입니다.
+
+    추천 사이트: [IT 인벤 PC 견적 게시판](http://www.inven.co.kr/board/it/2631)
+
+    대시보드 최종 수정일: 2020/06/11
+
+    [See Source Code](https://github.com/SSANGMAN/Danawa)
+    """)
 
 # MainPage Setting
 st.header("CPU 선택")
@@ -134,13 +134,13 @@ try:
     elif selected_cpu_brand == 'AMD':
         filter_cpu_df = cpu_df[cpu_df['NAME'].str.contains(r'AMD')]
 
+    st.dataframe(filter_cpu_df)
+    select_cpu = st.selectbox("CPU 선택", filter_cpu_df['NAME'].unique().tolist())
+    selected_cpu_socket = filter_cpu_df.loc[filter_cpu_df['NAME'] == select_cpu]['SOCKET'].unique()
+    subtract_cpu_budget = int(budget_box) * 10000 - filter_cpu_df.loc[filter_cpu_df['NAME'] == select_cpu]['PRICE'].unique()
+    st.text("잔여 예산: {}원".format(subtract_cpu_budget))
 except  ValueError:
     st.error("먼저 왼쪽에서 예산을 기입해주세요!")
-
-st.dataframe(filter_cpu_df)
-select_cpu = st.selectbox("CPU 선택", filter_cpu_df['NAME'].unique().tolist())
-#remain_budget = budget_box - filter_cpu_df.loc[filter_cpu_df['NAME'] == select_cpu]['PRICE'].values()
-#st.text("잔여 예산: ", remain_budget)
 
 st.header("Main Board 선택")
 st.markdown(
@@ -154,9 +154,22 @@ st.markdown(
     메인보드에는 CPU를 장착할 수 있는 소켓이 존재합니다. 이런 소켓은 CPU마다 상이할 수 있기 때문에 위에서 선택한 CPU와 호환이 되는 메인보드를 선택해야 합니다.
     """
 )
+
 try:
+    st.text("""
+        선택한 CPU는 {} 입니다. 
+
+        이 CPU에 맞는 소켓 {} 을 가진 메인보드를 검색합니다.
+        """.format(select_cpu, selected_cpu_socket[0]))
+
     mb_df = import_data(table = "mainboard", start_date = today, end_date = today)
     mb_df = CurrentPrice(mb_df)
 
-    filter_mb_df = mb_df[mb_df]
-    
+    filter_mb_df = mb_df.loc[(mb_df['SOCKET'] == selected_cpu_socket[0]) | (mb_df['PRICE'] < subtract_cpu_budget)]
+    st.dataframe(filter_mb_df)
+    select_mb = st.selectbox("메인보드 선택", filter_mb_df['NAME'].unique().tolist())
+    subtract_mb_budget = int(substract_cpu_budget) - filter_mb_df.loc[filter_mb_df['NAME'] == select_mb]['PRICE'].unique()
+    st.text("잔여 예산: {}원".format(subtract_mb_budget))
+
+except NameError:
+    st.error("이전 단계를 먼저 수행해주세요!")
