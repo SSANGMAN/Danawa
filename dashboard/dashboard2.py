@@ -81,7 +81,7 @@ st.markdown(
 
     추천 사이트: [IT 인벤 PC 견적 게시판](http://www.inven.co.kr/board/it/2631)
 
-    대시보드 최종 수정일: 2020/06/11
+    대시보드 최종 수정일: 2020/06/19
 
     [See Source Code](https://github.com/SSANGMAN/Danawa)
     """)
@@ -112,7 +112,7 @@ st.markdown(
     한 가지 주의해야 할 점은 컴퓨터는 CPU만으로 작동하지 않는다는 것입니다. 따라서, 남은 부품에 대한 예산을 고려하고 선택하셔야 합니다.
     """)
 
-def CurrentPrice(dataframe):
+def CurrentPrice(dataframe, socket = True):
     recent_time = datetime.datetime.now().hour
     df = dataframe.loc[(dataframe['HOUR'] == recent_time) & (dataframe['PRICE'] < int(budget_box) * 10000)]
     
@@ -122,25 +122,26 @@ def CurrentPrice(dataframe):
 
         if len(df) != 0:
             break
+    if socket == True:
+        return df[['NAME', 'PRICE', 'SOCKET']]
     
-    return df[['NAME', 'PRICE', 'SOCKET']]
+    else:
+        return df[['NAME', 'PRICE']]
 
-try:
-    cpu_df = import_data(table = "cpu", start_date = today, end_date = today)
-    cpu_df = CurrentPrice(cpu_df)
 
-    if selected_cpu_brand == 'Intel':
-        filter_cpu_df = cpu_df[cpu_df['NAME'].str.contains(r'인텔')]
-    elif selected_cpu_brand == 'AMD':
-        filter_cpu_df = cpu_df[cpu_df['NAME'].str.contains(r'AMD')]
+cpu_df = import_data(table = "cpu", start_date = today, end_date = today)
+cpu_df = CurrentPrice(cpu_df)
 
-    st.dataframe(filter_cpu_df)
-    select_cpu = st.selectbox("CPU 선택", filter_cpu_df['NAME'].unique().tolist())
-    selected_cpu_socket = filter_cpu_df.loc[filter_cpu_df['NAME'] == select_cpu]['SOCKET'].unique()
-    subtract_cpu_budget = int(budget_box) * 10000 - filter_cpu_df.loc[filter_cpu_df['NAME'] == select_cpu]['PRICE'].unique()
-    st.text("잔여 예산: {}원".format(subtract_cpu_budget))
-except  ValueError:
-    st.error("먼저 왼쪽에서 예산을 기입해주세요!")
+if selected_cpu_brand == 'Intel':
+    filter_cpu_df = cpu_df[cpu_df['NAME'].str.contains(r'인텔')]
+elif selected_cpu_brand == 'AMD':
+    filter_cpu_df = cpu_df[cpu_df['NAME'].str.contains(r'AMD')]
+
+st.dataframe(filter_cpu_df)
+select_cpu = st.selectbox("CPU 선택", filter_cpu_df['NAME'].unique().tolist())
+selected_cpu_socket = filter_cpu_df.loc[filter_cpu_df['NAME'] == select_cpu]['SOCKET'].unique()
+subtract_cpu_budget = int(budget_box) * 10000 - filter_cpu_df.loc[filter_cpu_df['NAME'] == select_cpu]['PRICE'].unique()
+st.text("잔여 예산: {}원".format(subtract_cpu_budget[0]))
 
 st.header("Main Board 선택")
 st.markdown(
@@ -155,21 +156,90 @@ st.markdown(
     """
 )
 
-try:
-    st.text("""
-        선택한 CPU는 {} 입니다. 
+st.markdown(
+    """
+    선택한 CPU에 맞는 소켓을 가진 메인보드를 선택하는 과정은 '칩셋' 또한 고려해야합니다.
 
-        이 CPU에 맞는 소켓 {} 을 가진 메인보드를 검색합니다.
-        """.format(select_cpu, selected_cpu_socket[0]))
+    칩셋에 대한 정보는 제품 이름에서 Z490-A, B460M 등과 같은 네이밍을 확인하면 됩니다.
 
-    mb_df = import_data(table = "mainboard", start_date = today, end_date = today)
-    mb_df = CurrentPrice(mb_df)
+    칩셋은 포트 수, 장착 슬롯 등 편의성의 차이가 가장 두드러집니다. 또한 상위 칩셋 제품일 수록 전원부가 더 튼튼하다거나 방열판이 더많이 붙어있다는 차이가 존재합니다.
 
-    filter_mb_df = mb_df.loc[(mb_df['SOCKET'] == selected_cpu_socket[0]) | (mb_df['PRICE'] < subtract_cpu_budget)]
-    st.dataframe(filter_mb_df)
-    select_mb = st.selectbox("메인보드 선택", filter_mb_df['NAME'].unique().tolist())
-    subtract_mb_budget = int(substract_cpu_budget) - filter_mb_df.loc[filter_mb_df['NAME'] == select_mb]['PRICE'].unique()
-    st.text("잔여 예산: {}원".format(subtract_mb_budget))
+    따라서, 고성능의 CPU를 사용할수록 안정성을 위해 상위 칩셋의 제품을 사용하는 것이 일반적입니다.
 
-except NameError:
-    st.error("이전 단계를 먼저 수행해주세요!")
+    다음 내용은 칩셋에 대한 간단한 설명입니다.
+    """
+)
+if selected_cpu_brand == 'Intel':
+    st.markdown(
+        """
+        H310: 최하위 칩셋. 사무용 및 저사양 게이밍을 목적으로 견적을 구성한다면 추천
+
+        B460: 보급형 칩셋. 일반적인 게이밍 PC로 견적을 구성한다면 추천
+
+        Z490: 하이엔드용 칩셋. 
+        """
+    )
+elif selected_cpu_brand == 'AMD':
+    st.markdown(
+        """
+        A320: 최하위 칩셋. 극한의 가성비를 원한다면 추천
+
+        B450: 보급형 칩셋. 일반적인 게이밍 PC로 견적을 구성한다면 추천
+
+        X470: 뭔가 애매한 포지션을 유지하고있는 칩셋. 이거를 선택할바엔 X570 추천
+
+        X570: 하이엔드용 칩셋. 높아진 칩셋 발열량을 감당하기 위해 메인보드 자체에 소평 팬이 장착되어있음.
+        
+        메인보드 선택에 대한 추가적인 정보는 다음 링크를 참고하세요
+        
+        [CPU에 걸맞은 메인보드 찾기, 인텔 9세대 커피레이크 리프레시 메인보드 고르기](http://www.ilovepc.co.kr/news/articleView.html?idxno=21238)
+        """
+    )
+
+st.text(
+    """
+    선택한 CPU는 {} 입니다. 
+
+    이 CPU에 맞는 소켓 {} 을 가진 메인보드를 검색합니다.
+    """.format(select_cpu, selected_cpu_socket[0]))
+
+
+mb_df = import_data(table = "mainboard", start_date = today, end_date = today)
+mb_df = CurrentPrice(mb_df)
+
+filter_mb_df = mb_df.loc[(mb_df['SOCKET'] == selected_cpu_socket[0])&(mb_df['PRICE'] < subtract_cpu_budget[0])]
+
+st.dataframe(filter_mb_df)
+select_mb = st.selectbox("메인보드 선택", filter_mb_df['NAME'].unique().tolist())
+subtract_mb_budget = int(subtract_cpu_budget) - filter_mb_df.loc[filter_mb_df['NAME'] == select_mb]['PRICE'].unique()
+st.text("잔여 예산: {}원".format(subtract_mb_budget[0]))
+
+if (purpose_button == '게임용') |(purpose_button == '고성능 작업용(영상 편집 등)'):
+    st.header("GPU 선택")
+    st.markdown(
+        """
+        드디어, 게임과 작업에 가장 중요하다고 볼 수 있는 그래픽카드(GPU)를 선택하는 단계입니다. 성능에 따라 가장 많은 비용이 필요할 수 있습니다.
+
+        GPU의 브랜드는 일반적으로 Nvidia의 GForce, AMD의 Radeon이 있습니다. 예전부터 GForce는 게임, Radeon은 3D 작업, 영상 편집에 유리하다는 인식이 강했습니다.
+
+        여기에서 클럭 수가 어떻다, VRAM이 어떻다를 설명하기에는 너무 복잡하기 때문에 생략하고 간단하게 설명만 하고 넘어가겠습니다.
+
+        Radeon은 영상편집같은 다중 작업에 유리하고 중간 사양급 게임을 하기엔 훨씬 유리. 그러나, 게임 위주로 컴퓨터를 사용한다면 지포스가 가성비 대비 훨씬 유리.
+
+        세부적인 정보는 다음 링크를 통해 확인할 수 있습니다.
+        
+        [라데온 지포스 그래픽카드 차이점 비교!](https://m.blog.naver.com/PostView.nhn?blogId=lks09251&logNo=221269840032&proxyReferer=https:%2F%2Fwww.google.com%2F)
+        """ 
+    )
+    gpu_df = import_data(table = 'gpu', start_date = today, end_date = today)
+    gpu_df = CurrentPrice(gpu_df, socket = False)
+
+    filter_gpu_df = gpu_df.loc[(gpu_df['PRICE'] < subtract_mb_budget[0])]
+
+    st.dataframe(filter_gpu_df)
+    select_gpu = st.selectbox("GPU 선택", filter_gpu_df['NAME'].unique().tolist())
+    subtract_gpu_budget = int(subtract_mb_budget) - filter_gpu_df.loc[filter_gpu_df['NAME'] == select_gpu]['PRICE'].unique()
+    st.text("잔여 예산: {}원".format(subtract_gpu_budget[0]))
+
+else:
+    pass
