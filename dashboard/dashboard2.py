@@ -11,6 +11,7 @@ import datetime
 
 purpose = ['사무용', '게임용', '고성능 작업용(영상 편집 등)']
 cpu_brand = ['Intel', 'AMD']
+gpu_brand = ['GForce', 'Radeon']
 today = datetime.date.today()
 
 def import_data(table, start_date, end_date):
@@ -81,7 +82,7 @@ st.markdown(
 
     추천 사이트: [IT 인벤 PC 견적 게시판](http://www.inven.co.kr/board/it/2631)
 
-    대시보드 최종 수정일: 2020/06/19
+    대시보드 최종 수정일: 2020/06/23
 
     [See Source Code](https://github.com/SSANGMAN/Danawa)
     """)
@@ -112,7 +113,7 @@ st.markdown(
     한 가지 주의해야 할 점은 컴퓨터는 CPU만으로 작동하지 않는다는 것입니다. 따라서, 남은 부품에 대한 예산을 고려하고 선택하셔야 합니다.
     """)
 
-def CurrentPrice(dataframe, socket = True):
+def CurrentPrice(dataframe, component):
     recent_time = datetime.datetime.now().hour
     df = dataframe.loc[(dataframe['HOUR'] == recent_time) & (dataframe['PRICE'] < int(budget_box) * 10000)]
     
@@ -122,15 +123,21 @@ def CurrentPrice(dataframe, socket = True):
 
         if len(df) != 0:
             break
-    if socket == True:
+    if (component == 'cpu'):
         return df[['NAME', 'PRICE', 'SOCKET']]
+
+    elif component == 'mb':
+        return df[['BRAND', 'NAME', 'PRICE', 'SOCKET']]
     
-    else:
-        return df[['NAME', 'PRICE']]
+    elif component == 'gpu':
+        return df[['BRAND','NAME', 'PRICE']]
+
+    elif component == 'ram':
+        return df[['NAME', 'PRICE', 'PURPOSE', 'BRAND']]
 
 
 cpu_df = import_data(table = "cpu", start_date = today, end_date = today)
-cpu_df = CurrentPrice(cpu_df)
+cpu_df = CurrentPrice(cpu_df, component = 'cpu')
 
 if selected_cpu_brand == 'Intel':
     filter_cpu_df = cpu_df[cpu_df['NAME'].str.contains(r'인텔')]
@@ -156,6 +163,44 @@ st.markdown(
     """
 )
 
+st.subheader("제조사 선택")
+st.markdown(
+    """
+    이제 메인보드의 브랜드를 선택해야 합니다. 메인보드 제조사는 크게 MSI, ASRock, GIGABYTE, ASUS까지 네 곳이 있습니다. BIOSTAR는 제품 이슈가 너무 많아 배제합니다.  
+    
+    아래 브랜드를 선택하면 제조사별 특징에 대해 설명이 함께 나와있으므로 참고하여 선택합니다.
+    """
+)
+mb_df = import_data(table = "mainboard", start_date = today, end_date = today)
+mb_df = CurrentPrice(mb_df, component = 'mb')
+mb_brand = st.selectbox("메인보드 제조사 선택", mb_df['BRAND'].unique())
+
+if mb_brand == 'MSI':
+    st.markdown(
+        """
+        가성비 있는 가격에 독자적인 프로그램을 통해 안정성 확보. 하지만 고성능 PC에는 부적합하다는 의견이 많다.
+        """
+    )
+elif mb_brand == "ASUS":
+    st.markdown(
+        """
+        버그가 거의 없어 오버클럭(강제 성능 향상) 등 고성능 PC에 적합하다. 하지만 높은 가격대를 보이는 브랜드.
+        """
+    )
+elif mb_brand == "ASRock":
+    st.markdown(
+        """
+        ASUS의 산하 마이너 브랜드. 높은 가성비를 모토로하며 어느정도 안정성도 보장한다. 하지만 고성능 PC에는 부적합하다는 의견이 많다.
+        """
+    )
+elif mb_brand == "GIGABYTE":
+    st.markdown(
+        """
+        ASUS보다 가성비가 좋은 편이며 잔 버그가 거의 없어 안정성이 뛰어나다. 다만, 국내 AS평이 좋지 않다는 것이 단점.
+        """
+    )
+
+st.subheader("칩셋 선택")
 st.markdown(
     """
     선택한 CPU에 맞는 소켓을 가진 메인보드를 선택하는 과정은 '칩셋' 또한 고려해야합니다.
@@ -195,20 +240,14 @@ elif selected_cpu_brand == 'AMD':
         [CPU에 걸맞은 메인보드 찾기, 인텔 9세대 커피레이크 리프레시 메인보드 고르기](http://www.ilovepc.co.kr/news/articleView.html?idxno=21238)
         """
     )
-
 st.text(
     """
     선택한 CPU는 {} 입니다. 
 
-    이 CPU에 맞는 소켓 {} 을 가진 메인보드를 검색합니다.
-    """.format(select_cpu, selected_cpu_socket[0]))
+    이 CPU에 맞는 소켓 {} 을 가진 {}사 메인보드를 검색합니다.
+    """.format(select_cpu, selected_cpu_socket[0], mb_brand))
 
-
-mb_df = import_data(table = "mainboard", start_date = today, end_date = today)
-mb_df = CurrentPrice(mb_df)
-
-filter_mb_df = mb_df.loc[(mb_df['SOCKET'] == selected_cpu_socket[0])&(mb_df['PRICE'] < subtract_cpu_budget[0])]
-
+filter_mb_df = mb_df.loc[(mb_df['SOCKET'] == selected_cpu_socket[0])&(mb_df['PRICE'] < subtract_cpu_budget[0]) & (mb_df['BRAND'] == mb_brand)]
 st.dataframe(filter_mb_df)
 select_mb = st.selectbox("메인보드 선택", filter_mb_df['NAME'].unique().tolist())
 subtract_mb_budget = int(subtract_cpu_budget) - filter_mb_df.loc[filter_mb_df['NAME'] == select_mb]['PRICE'].unique()
@@ -224,22 +263,55 @@ if (purpose_button == '게임용') |(purpose_button == '고성능 작업용(영�
 
         여기에서 클럭 수가 어떻다, VRAM이 어떻다를 설명하기에는 너무 복잡하기 때문에 생략하고 간단하게 설명만 하고 넘어가겠습니다.
 
-        Radeon은 영상편집같은 다중 작업에 유리하고 중간 사양급 게임을 하기엔 훨씬 유리. 그러나, 게임 위주로 컴퓨터를 사용한다면 지포스가 가성비 대비 훨씬 유리.
+        Radeon은 영상편집같은 다중 작업에 유리하고 중간 사양급 게임을 하기엔 훨씬 유리합니다. 그러나, 게임 위주로 컴퓨터를 사용한다면 지포스가 가성비 대비 훨씬 유리합니다.
 
         세부적인 정보는 다음 링크를 통해 확인할 수 있습니다.
         
         [라데온 지포스 그래픽카드 차이점 비교!](https://m.blog.naver.com/PostView.nhn?blogId=lks09251&logNo=221269840032&proxyReferer=https:%2F%2Fwww.google.com%2F)
         """ 
     )
+    selected_gpu_brand = st.selectbox("GPU 브랜드 선택", gpu_brand)
+        
     gpu_df = import_data(table = 'gpu', start_date = today, end_date = today)
-    gpu_df = CurrentPrice(gpu_df, socket = False)
+    gpu_df = CurrentPrice(gpu_df, component = 'gpu')
 
-    filter_gpu_df = gpu_df.loc[(gpu_df['PRICE'] < subtract_mb_budget[0])]
+    if selected_gpu_brand == 'GForce':
+        filter_gpu_df = gpu_df[gpu_df['NAME'].str.contains(r'지포스')]
+    elif selected_cpu_brand == 'Radeon':
+        filter_gpu_df = gpu_df[gpu_df['NAME'].str.contains(r'라데온')]
 
-    st.dataframe(filter_gpu_df)
+    filter_gpu_df = filter_gpu_df.loc[(filter_gpu_df['PRICE'] < subtract_mb_budget[0])]
+
+    st.dataframe(filter_gpu_df[['NAME', 'PRICE']])
     select_gpu = st.selectbox("GPU 선택", filter_gpu_df['NAME'].unique().tolist())
     subtract_gpu_budget = int(subtract_mb_budget) - filter_gpu_df.loc[filter_gpu_df['NAME'] == select_gpu]['PRICE'].unique()
     st.text("잔여 예산: {}원".format(subtract_gpu_budget[0]))
 
 else:
     pass
+
+st.header("RAM 선택")
+st.markdown(
+    """
+    여기까지 오느라 수고 많으셨습니다. 이제 PC의 성능을 좌우하는 부품 선택의 마지막 RAM입니다.
+
+    RAM은 쉽게 말해 컴퓨터가 한 번에 많은 일을 할 수 있는 규모를 결정하는 부품입니다.
+
+    CPU가 아무리 일을 많이 할 수 있어봤자, 이를 수용할 수 있는 책상이 없다면 말짱 도루묵이 됩니다. 이 때, 책상의 역할을 하는 것이 RAM입니다.
+    
+    RAM을 선택하는 방법은 정말 단순하게 생각하자면 (그냥 삼성 RAM을 사용하시면 됩니다.)
+
+    일반적으로, 게임용 PC 견적에는 8g x 2 = 16g를 추천합니다.
+    """
+)
+ram_df = import_data(table = 'ram', start_date = today, end_date = today)
+ram_df = CurrentPrice(ram_df, component = 'ram')
+ram_brand = st.selectbox("RAM 브랜드 선택", ram_df['BRAND'].unique())
+
+filter_ram_df = ram_df.loc[(ram_df['PURPOSE'] == 'PC용') & (ram_df['BRAND'] == ram_brand)]
+st.dataframe(filter_ram_df.drop(columns = ['PURPOSE', 'BRAND']))
+
+select_ram = st.selectbox("RAM 선택", filter_ram_df['NAME'].tolist())
+ram_quantity = int(st.text_input("RAM 수량"))
+subtract_ram_budget = int(subtract_gpu_budget) - (filter_ram_df.loc[filter_ram_df['NAME'] == select_ram]['PRICE'].unique()) * ram_quantity
+st.text("잔여 예산: {}원".format(subtract_ram_budget[0]))
