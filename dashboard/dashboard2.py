@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-
+from dateutil.relativedelta import relativedelta
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 
@@ -13,6 +13,7 @@ purpose = ['사무용', '게임용', '고성능 작업용(영상 편집 등)']
 cpu_brand = ['Intel', 'AMD']
 gpu_brand = ['GForce', 'Radeon']
 today = datetime.date.today()
+yesterday = today - relativedelta(months = 1)
 
 def import_data(table, start_date, end_date):
     connect = pymysql.connect(host = 'localhost', user = 'root', password = '4643', db = 'danawa', charset = 'utf8mb4')
@@ -64,6 +65,11 @@ st.sidebar.text(
     그러나, 옵션 타협을 고려해야 합니다. 
     """
 )
+
+st.sidebar.header("부품 가격 동향 옵션")
+st.sidebar.markdown("선택한 부품에 대한 가격 정보를 조정하는 설정 창 입니다.")
+start_date = st.sidebar.date_input('부품 가격 동향 시작 일자', yesterday)
+end_date = st.sidebar.date_input("부품 가격 동향 종료 일자", today)
 # Main Title Setting 
 st.title("컴못알을 위한 조립 PC 견적 참고 키트({})".format(purpose_button))
 st.markdown(
@@ -82,7 +88,7 @@ st.markdown(
 
     추천 사이트: [IT 인벤 PC 견적 게시판](http://www.inven.co.kr/board/it/2631)
 
-    대시보드 최종 수정일: 2020/06/23
+    대시보드 최종 수정일: 2020/06/26
 
     [See Source Code](https://github.com/SSANGMAN/Danawa)
     """)
@@ -148,7 +154,18 @@ st.dataframe(filter_cpu_df)
 select_cpu = st.selectbox("CPU 선택", filter_cpu_df['NAME'].unique().tolist())
 selected_cpu_socket = filter_cpu_df.loc[filter_cpu_df['NAME'] == select_cpu]['SOCKET'].unique()
 subtract_cpu_budget = int(budget_box) * 10000 - filter_cpu_df.loc[filter_cpu_df['NAME'] == select_cpu]['PRICE'].unique()
+
+st.markdown(
+    """
+    아래 그래프는 선택한 CPU의 가격 동향입니다. 이 그래프를 통해서 현재 CPU의 가격이 부풀려진 가격인지 확인 할 수 있습니다.
+    """
+)
+vis_cpu_df = import_data(table = "cpu", start_date = start_date, end_date = end_date)
+daily_cpu_price = vis_cpu_df.groupby(["CRAWL_DATE", "NAME"])['PRICE'].mean().reset_index().set_index("CRAWL_DATE")
+st.line_chart(daily_cpu_price.loc[daily_cpu_price['NAME'] == select_cpu]['PRICE'])
+
 st.text("잔여 예산: {}원".format(subtract_cpu_budget[0]))
+
 
 st.header("Main Board 선택")
 st.markdown(
@@ -251,6 +268,11 @@ filter_mb_df = mb_df.loc[(mb_df['SOCKET'] == selected_cpu_socket[0])&(mb_df['PRI
 st.dataframe(filter_mb_df)
 select_mb = st.selectbox("메인보드 선택", filter_mb_df['NAME'].unique().tolist())
 subtract_mb_budget = int(subtract_cpu_budget) - filter_mb_df.loc[filter_mb_df['NAME'] == select_mb]['PRICE'].unique()
+
+vis_mb_df = import_data(table = "mainboard", start_date = start_date, end_date = end_date)
+daily_mb_price = vis_mb_df.groupby(["CRAWL_DATE", "NAME"])['PRICE'].mean().reset_index().set_index("CRAWL_DATE")
+st.line_chart(daily_mb_price.loc[daily_mb_price['NAME'] == select_mb]['PRICE'])
+
 st.text("잔여 예산: {}원".format(subtract_mb_budget[0]))
 
 if (purpose_button == '게임용') |(purpose_button == '고성능 작업용(영상 편집 등)'):
@@ -285,6 +307,16 @@ if (purpose_button == '게임용') |(purpose_button == '고성능 작업용(영�
     st.dataframe(filter_gpu_df[['NAME', 'PRICE']])
     select_gpu = st.selectbox("GPU 선택", filter_gpu_df['NAME'].unique().tolist())
     subtract_gpu_budget = int(subtract_mb_budget) - filter_gpu_df.loc[filter_gpu_df['NAME'] == select_gpu]['PRICE'].unique()
+
+    st.markdown(
+    """
+    아래 그래프는 선택한 GPU의 가격 동향입니다. 이 그래프를 통해서 현재 CPU의 가격이 부풀려진 가격인지 확인 할 수 있습니다.
+    """
+)
+    vis_gpu_df = import_data(table = "gpu", start_date = start_date, end_date = end_date)
+    daily_gpu_price = vis_gpu_df.groupby(["CRAWL_DATE", "NAME"])['PRICE'].mean().reset_index().set_index("CRAWL_DATE")
+    st.line_chart(daily_gpu_price.loc[daily_gpu_price['NAME'] == select_gpu]['PRICE'])
+
     st.text("잔여 예산: {}원".format(subtract_gpu_budget[0]))
 
 else:
@@ -312,6 +344,12 @@ filter_ram_df = ram_df.loc[(ram_df['PURPOSE'] == 'PC용') & (ram_df['BRAND'] == 
 st.dataframe(filter_ram_df.drop(columns = ['PURPOSE', 'BRAND']))
 
 select_ram = st.selectbox("RAM 선택", filter_ram_df['NAME'].tolist())
+
+vis_ram_df = import_data(table = "ram", start_date = start_date, end_date = end_date)
+daily_ram_price = vis_ram_df.groupby(["CRAWL_DATE", "NAME"])['PRICE'].mean().reset_index().set_index("CRAWL_DATE")
+st.line_chart(daily_ram_price.loc[daily_ram_price['NAME'] == select_ram]['PRICE'])
+
 ram_quantity = int(st.text_input("RAM 수량"))
 subtract_ram_budget = int(subtract_gpu_budget) - (filter_ram_df.loc[filter_ram_df['NAME'] == select_ram]['PRICE'].unique()) * ram_quantity
+
 st.text("잔여 예산: {}원".format(subtract_ram_budget[0]))
