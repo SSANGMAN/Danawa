@@ -66,7 +66,7 @@ def main():
         time.sleep(0.5)
         
         if i == 1:
-            for j in range(1, 24):
+            for j in range(1, 23):
                 product_name_xpath = name_xpath.format(j)
                 product_price_xpath = price_xpath.format(j)
                 product_enroll_xpath = enroll_xpath.format(j)
@@ -130,7 +130,7 @@ def main():
                 time.sleep(1)
 
         elif i == 3:
-            for j in range(1, 8):
+            for j in range(1, 9):
                 product_name_xpath = name_xpath.format(j)
                 product_price_xpath = price_xpath.format(j)
                 product_enroll_xpath = enroll_xpath.format(j)
