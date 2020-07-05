@@ -28,13 +28,13 @@ class DBConnect:
         self.conn = pymysql.connect(host = 'localhost', user = 'root', password = '4643' , db = 'danawa', charset = 'utf8')
         self.curs = self.conn.cursor(pymysql.cursors.DictCursor)
     
-    def insert(self, date, hour, rank, name, price, release, brand, type, size):
+    def insert(self, date, hour, rank, name, price, release, brand, type, size, standard):
         try:
-            sql = """INSERT INTO ssd(CRAWL_DATE, HOUR, RANKING, NAME, PRICE, RELEASE_DATE, TYPE, BRAND, SIZE) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+            sql = """INSERT INTO ssd(CRAWL_DATE, HOUR, RANKING, NAME, PRICE, RELEASE_DATE, TYPE, BRAND, SIZE, STANDARD) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
             
             for i in range(50):
                 
-                self.curs.execute(sql, (date, hour, i+1, name[i], price[i], release[i], type[i], brand[i], size[i]))
+                self.curs.execute(sql, (date, hour, i+1, name[i], price[i], release[i], type[i], brand[i], size[i], standard[i]))
             
             self.conn.commit()
             
@@ -52,12 +52,14 @@ def main():
     product_price_list = []
     product_enroll_list = []
     product_power_list = []
+    product_standard_list = []
 
     name_xpath = "/html/body/form/div/div[3]/ul/li[{}]/div/div[2]/div[1]/a"
     price_xpath = "/html/body/form/div/div[3]/ul/li[{}]/div/div[3]/div/dl/dd/span"
     enroll_xpath = "/html/body/form/div/div[3]/ul/li[{}]/div/div[2]/div[2]/dl/dd"
     type_xpath = "/html/body/form/div/div[3]/ul/li[{}]/div/div[2]/dl/dd/ul/li[3]"
-
+    standard_xpath = "/html/body/form/div/div[3]/ul/li[{}]/div/div[2]/dl/dd/ul/li[2]"
+    
     for i in range(1, 4):
         print("Page: {}\n".format(i))
         page_xpath = "/html/body/form/div/div[4]/div/a[{}]".format(i)
@@ -71,14 +73,16 @@ def main():
                 product_price_xpath = price_xpath.format(j)
                 product_enroll_xpath = enroll_xpath.format(j)
                 product_type_xpath = type_xpath.format(j)
+                product_standard_xpath = standard_xpath.format(j)
                     
                 try:
                     product_name = driver.find_element_by_xpath(product_name_xpath)
                     product_price = driver.find_element_by_xpath(product_price_xpath)
                     product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
                     product_type = driver.find_element_by_xpath(product_type_xpath)
+                    product_standard = driver.find_element_by_xpath(product_standard_xpath)
 
-                    print(product_name.text,"\n",product_price.text,"\n",product_type.text,"\n",product_enroll.text)
+                    print(product_name.text,"\n",product_price.text,"\n",product_type.text,"\n",product_standard.text,"\n",product_enroll.text)
 
                     product_price_list.append(product_price.text)
 
@@ -86,14 +90,16 @@ def main():
                     product_name = driver.find_element_by_xpath(product_name_xpath)
                     product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
                     product_type = driver.find_element_by_xpath(product_type_xpath)
+                    product_standard = driver.find_element_by_xpath(product_standard_xpath)
                     
-                    print(product_name.text,"\n","0","\n",product_type.text,"\n",product_enroll.text)
+                    print(product_name.text,"\n","0","\n",product_type.text,"\n",product_standard.text,"\n",product_enroll.text)
 
                     product_price_list.append('0')
                     
                 product_name_list.append(product_name.text)
                 product_enroll_list.append(product_enroll.text)
                 product_power_list.append(product_type.text)
+                product_standard_list.append(product_standard.text)
                 
                 time.sleep(1)
 
@@ -103,14 +109,16 @@ def main():
                 product_price_xpath = price_xpath.format(j)
                 product_enroll_xpath = enroll_xpath.format(j)
                 product_type_xpath = type_xpath.format(j)
+                product_standard_xpath = standard_xpath.format(j)
 
                 try:
                     product_name = driver.find_element_by_xpath(product_name_xpath)
                     product_price = driver.find_element_by_xpath(product_price_xpath)
                     product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
                     product_type = driver.find_element_by_xpath(product_type_xpath)
+                    product_standard = driver.find_element_by_xpath(product_standard_xpath)
 
-                    print(product_name.text,"\n",product_price.text,"\n",product_type.text,"\n",product_enroll.text)
+                    print(product_name.text,"\n",product_price.text,"\n",product_type.text,"\n",product_standard.text,"\n",product_enroll.text)
 
                     product_price_list.append(product_price.text)
                     
@@ -118,14 +126,16 @@ def main():
                     product_name = driver.find_element_by_xpath(product_name_xpath)
                     product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
                     product_type = driver.find_element_by_xpath(product_type_xpath)
+                    product_standard = driver.find_element_by_xpath(product_standard_xpath)
                     
-                    print(product_name.text,"\n","0","\n",product_type.text,"\n",product_enroll.text)
+                    print(product_name.text,"\n","0","\n",product_type.text,"\n",product_standard.text,"\n",product_enroll.text)
 
                     product_price_list.append('0')
                     
                 product_name_list.append(product_name.text)
                 product_enroll_list.append(product_enroll.text)
                 product_power_list.append(product_type.text)
+                product_standard_list.append(product_standard.text)
                 
                 time.sleep(1)
 
@@ -134,14 +144,17 @@ def main():
                 product_name_xpath = name_xpath.format(j)
                 product_price_xpath = price_xpath.format(j)
                 product_enroll_xpath = enroll_xpath.format(j)
+                product_type_xpath = type_xpath.format(j)
+                product_standard_xpath = standard_xpath.format(j)
 
                 try:
                     product_name = driver.find_element_by_xpath(product_name_xpath)
                     product_price = driver.find_element_by_xpath(product_price_xpath)
                     product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
                     product_type = driver.find_element_by_xpath(product_type_xpath)
+                    product_standard = driver.find_element_by_xpath(product_standard_xpath)
 
-                    print(product_name.text,"\n",product_price.text,"\n",product_type.text,"\n",product_enroll.text)
+                    print(product_name.text,"\n",product_price.text,"\n",product_type.text,"\n",product_standard.text,"\n",product_enroll.text)
 
                     product_price_list.append(product_price.text)
                     
@@ -149,14 +162,16 @@ def main():
                     product_name = driver.find_element_by_xpath(product_name_xpath)
                     product_enroll = driver.find_element_by_xpath(product_enroll_xpath)
                     product_type = driver.find_element_by_xpath(product_type_xpath)
+                    product_standard = driver.find_element_by_xpath(product_standard_xpath)
                     
-                    print(product_name.text,"\n","0","\n",product_type.text,"\n",product_enroll.text)
+                    print(product_name.text,"\n","0","\n",product_type.text,"\n",product_standard.text,"\n",product_enroll.text)
 
                     product_price_list.append('0')
                     
                 product_name_list.append(product_name.text)
                 product_enroll_list.append(product_enroll.text)
                 product_power_list.append(product_type.text)
+                product_standard_list.append(product_standard.text)
                 
                 time.sleep(1)
 
@@ -171,6 +186,6 @@ def main():
     rank = range(1, 51)
 
     db = DBConnect()
-    db.insert(crawl_date, crawl_time, rank, product_name_list, product_price_list, product_enroll_list, brand_list, product_power_list, size_list)
+    db.insert(crawl_date, crawl_time, rank, product_name_list, product_price_list, product_enroll_list, brand_list, product_power_list, size_list, product_standard_list)
 
 main()
