@@ -353,3 +353,20 @@ ram_quantity = int(st.text_input("RAM 수량"))
 subtract_ram_budget = int(subtract_gpu_budget) - (filter_ram_df.loc[filter_ram_df['NAME'] == select_ram]['PRICE'].unique()) * ram_quantity
 
 st.text("잔여 예산: {}원".format(subtract_ram_budget[0]))
+
+# SSD
+st.header('SSD 선택')
+st.markdown(
+    """
+    여기까지 우여곡절 따라오셨다면, PC의 핵심 부품은 거의 다 선택하신겁니다. 
+
+    이제, PC의 저장소를 선택할 차례입니다. 이 페이지에서는 SSD 견적만 추천하겠습니다.
+
+    SSD는 우리가 일반적으로 아는 하드(HDD)와 비슷한 역할을 수행하지만, 파일을 읽고 쓰는 능력에서 하드를 압도합니다.
+
+    그러나, 단점도 존재합니다. HDD보다 비싸다는 것이죠.
+
+
+    
+    """
+)
